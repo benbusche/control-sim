@@ -21,6 +21,7 @@ added later, after the first simulation works.
 - Simulate cart and pole motion using clear physical values and units.
 - Support reset, pause, and start controls.
 - Apply bounded force from manual input or the PID controller.
+- In PID mode, balance the pole while moving the cart toward a chosen target position.
 - Send the current position, angle, and control mode to the browser.
 - Keep the physics separate from the web server so it can be reused later.
 
@@ -32,6 +33,7 @@ added later, after the first simulation works.
 - Show the pole angle, cart position, and whether the simulation is running.
 - Provide start, pause, and reset controls.
 - Let the user adjust PID settings once PID mode is added.
+- Let the user choose the cart's target position in PID mode.
 
 ## Project layout
 
@@ -67,6 +69,7 @@ frontend/
 - [x] Add PID tuning and live state readouts.
 - [x] Add start, pause, and reset controls.
 - [x] Document how to run the app.
+- [ ] Add a PID target-position control and move the cart toward that position.
 - [ ] Check that both control modes behave as expected.
 
 ## Running the project

@@ -33,18 +33,20 @@ function drawCartPole(state) {
   context.lineTo(canvas.width - 80, trackY);
   context.stroke();
 
+  // Cart
+  context.fillStyle = "gray";
+  context.fillRect(cartX, cartTop, cartWidth, cartHeight);
+
   // Pendulum rod
-  context.strokeStyle = "blue";
+  context.strokeStyle = ["fallen", "track limit"].includes(state.status)
+    ? "red"
+    : "blue";
   context.lineWidth = 8;
   context.lineCap = "round";
   context.beginPath();
   context.moveTo(pivotX, pivotY);
   context.lineTo(rodEndX, rodEndY);
   context.stroke();
-
-  // Cart
-  context.fillStyle = "gray";
-  context.fillRect(cartX, cartTop, cartWidth, cartHeight);
 }
 
 function sendCommand(command) {
@@ -182,4 +184,4 @@ async function refreshState() {
 }
 
 refreshState();
-setInterval(refreshState, 50);
+setInterval(refreshState, 1000 / 60);

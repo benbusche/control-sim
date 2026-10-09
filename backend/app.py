@@ -1,6 +1,6 @@
 """Local web server for the cart-pole simulation."""
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
@@ -19,8 +19,10 @@ from .simulation import (
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND = ROOT / "frontend"
 TIME_STEP = 1 / 120
-FALL_ANGLE = math.radians(45)
+FALL_ANGLE = math.radians(80)
 TRACK_LIMIT = 2.5
+CART_BRAKE_RATE = 3.0
+POLE_DAMPING_RATE = 0.5
 
 
 class SimulationSession:
@@ -112,6 +114,10 @@ class SimulationSession:
 
     def advance(self, dt):
         with self.lock:
+            if self.status in ("fallen", "track limit"):
+                self._advance_without_control(dt)
+                return
+
             if not self.running:
                 return
 
@@ -130,9 +136,37 @@ class SimulationSession:
             if abs(self.state.theta) >= FALL_ANGLE:
                 self.running = False
                 self.status = "fallen"
+                self.left_pressed = False
+                self.right_pressed = False
+                self.force = 0.0
             elif abs(self.state.x) >= TRACK_LIMIT:
                 self.running = False
                 self.status = "track limit"
+                self.left_pressed = False
+                self.right_pressed = False
+                self.force = 0.0
+
+    def _advance_without_control(self, dt):
+        """Let the arm swing freely while the cart brakes or stays at the track edge."""
+
+        next_state = step(self.state, force=0.0, dt=dt)
+        at_track_limit = (
+            self.status == "track limit" or abs(next_state.x) >= TRACK_LIMIT
+        )
+        if at_track_limit:
+            cart_x = math.copysign(TRACK_LIMIT, next_state.x)
+            cart_x_dot = 0.0
+        else:
+            cart_x = next_state.x
+            cart_x_dot = next_state.x_dot * math.exp(-CART_BRAKE_RATE * dt)
+
+        self.state = replace(
+            next_state,
+            x=cart_x,
+            x_dot=cart_x_dot,
+            theta_dot=next_state.theta_dot * math.exp(-POLE_DAMPING_RATE * dt),
+        )
+        self.force = 0.0
 
 
 session = SimulationSession()
@@ -150,8 +184,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(FRONTEND), **kwargs)
 
     def log_message(self, format, *args):
-        # The browser polls this endpoint often; logging each poll floods the terminal.
-        if self.path == "/api/state":
+        # Routine browser API traffic would otherwise flood the terminal.
+        if self.path in ("/api/state", "/api/control"):
             return
         super().log_message(format, *args)
 
