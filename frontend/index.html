@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cart-Pole Simulation</title>
+    <link rel="stylesheet" href="src/styles.css" />
+    <script src="src/app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1>Cart-Pole Simulation</h1>
+      <canvas
+        id="simulation"
+        width="800"
+        height="400"
+        aria-label="A gray cart on a black track with a blue pendulum rod"
+      ></canvas>
+      <p id="connection-status" role="status">Connecting to Python backend…</p>
+
+      <section class="controls" aria-label="Simulation controls">
+        <label>
+          Control mode
+          <select id="mode">
+            <option value="manual">Manual</option>
+            <option value="pid">PID</option>
+          </select>
+        </label>
+        <button id="start">Start</button>
+        <button id="pause">Pause</button>
+        <button id="reset">Reset</button>
+      </section>
+
+      <section id="manual-controls" class="controls" aria-label="Manual controls">
+        <button id="left" type="button">Hold left ◀</button>
+        <button id="right" type="button">Hold right ▶</button>
+        <span>Arrow keys also control the cart.</span>
+      </section>
+
+      <fieldset id="pid-controls">
+        <legend>PID gains</legend>
+        <label>Kp <input id="kp" type="number" value="20" step="1" /></label>
+        <label>Ki <input id="ki" type="number" value="0" step="0.1" /></label>
+        <label>Kd <input id="kd" type="number" value="5" step="0.1" /></label>
+        <span>Changes apply when you leave a field.</span>
+      </fieldset>
+
+      <section class="readouts" aria-label="Simulation values">
+        <span>Angle: <strong id="angle">—</strong></span>
+        <span>Cart: <strong id="position">—</strong></span>
+        <span>Force: <strong id="force">—</strong></span>
+        <span>Status: <strong id="simulation-status">—</strong></span>
+      </section>
+    </main>
+  </body>
+</html>

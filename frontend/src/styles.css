@@ -1,0 +1,72 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 32px;
+  color: #222;
+  font-family: Arial, sans-serif;
+}
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: white;
+}
+
+.controls,
+.readouts,
+fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button,
+select,
+input {
+  padding: 8px;
+  font: inherit;
+}
+
+fieldset {
+  border: 1px solid #bbb;
+}
+
+fieldset label,
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+input {
+  width: 90px;
+}
+
+#connection-status {
+  min-height: 1.25em;
+}
+
+@media (max-width: 500px) {
+  body {
+    padding: 16px;
+  }
+}
