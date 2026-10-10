@@ -14,14 +14,13 @@ The first goal is a working cart-pole simulation with two control modes:
 The code should stay simple and easy to learn from. A double pendulum may be
 added later, after the first simulation works.
 
-## Features
+## Current features
 
 ### Python backend
 
 - Simulate cart and pole motion using clear physical values and units.
 - Support reset, pause, and start controls.
 - Apply bounded force from manual input or the PID controller.
-- In PID mode, balance the pole while moving the cart toward a chosen target position.
 - Send the current position, angle, and control mode to the browser.
 - Keep the physics separate from the web server so it can be reused later.
 
@@ -30,22 +29,26 @@ added later, after the first simulation works.
 - Draw the cart, pole, and track, and animate their movement.
 - Accept arrow-key and on-screen button input in Manual mode.
 - Let the user switch between Manual and PID modes.
-- Show the pole angle, cart position, and whether the simulation is running.
 - Provide start, pause, and reset controls.
-- Let the user adjust PID settings once PID mode is added.
-- Let the user choose the cart's target position in PID mode.
+- Let the user adjust PID gains.
+- Show angle, cart position, force, and simulation status.
+- Turn the arm red after a fall or track-limit hit.
 
 ## Project layout
 
 ```text
 backend/
-  app.py          # web server and browser connection
-  simulation.py   # cart-pole physics and state
-  controller.py   # manual and PID control
+  app.py          # HTTP server and process startup
+  session.py      # simulation state, controls, and fixed-step updates
+  simulation.py   # cart-pole physics
+  controller.py   # manual and PID force calculations
+  test_core.py    # tests for physics and controllers
 frontend/
   index.html      # page structure
   src/
-    app.js        # input, display, and backend connection
+    app.js        # page controls and state display
+    api.js        # requests to the Python backend
+    view.js       # canvas drawing
     styles.css    # page appearance
 ```
 
@@ -55,6 +58,8 @@ frontend/
 - Positive force moves the cart to the right.
 - Measurements use meters, seconds, kilograms, and radians.
 - The simulation uses small time steps for stable motion.
+- The pole is considered fallen at 80 degrees from upright; afterward the
+  controller stops and the arm swings freely while the cart slows down.
 - A double pendulum will need its own physics and control approach; it will not
   be handled automatically by the cart-pole controller.
 

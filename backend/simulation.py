@@ -83,11 +83,11 @@ def step(
     pole_mass_length = parameters.pole_mass * parameters.pole_com_length
 
     # These equations give the cart and pole accelerations for a uniform rod.
-    temp = (
+    cart_acceleration_term = (
         force + pole_mass_length * state.theta_dot**2 * sin_theta
     ) / total_mass
     theta_acc = (
-        parameters.gravity * sin_theta - cos_theta * temp
+        parameters.gravity * sin_theta - cos_theta * cart_acceleration_term
     ) / (
         parameters.pole_com_length
         * (
@@ -95,7 +95,10 @@ def step(
             - parameters.pole_mass * cos_theta**2 / total_mass
         )
     )
-    x_acc = temp - pole_mass_length * theta_acc * cos_theta / total_mass
+    x_acc = (
+        cart_acceleration_term
+        - pole_mass_length * theta_acc * cos_theta / total_mass
+    )
 
     # Update velocities first, then positions using those new velocities.
     x_dot = state.x_dot + x_acc * dt
