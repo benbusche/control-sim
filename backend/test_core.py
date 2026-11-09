@@ -1,6 +1,7 @@
 import pytest
 
 from backend.controller import PIDController, manual_force
+from backend.session import SimulationSession
 from backend.simulation import (
     CartPoleParameters,
     CartPoleState,
@@ -60,6 +61,62 @@ def test_pid_pushes_toward_upright_and_limits_force():
     controller = PIDController(kp=20, ki=0, kd=0, max_force=1)
 
     assert controller.force(CartPoleState(theta=0.1), dt=0.01) == 1
+
+
+def test_pid_uses_cart_target_position():
+    controller = PIDController(
+        kp=1,
+        ki=0,
+        kd=0,
+        target_position=1,
+        position_kp=0.2,
+        position_kd=0,
+    )
+
+    assert controller.force(CartPoleState(), dt=0.01) == pytest.approx(-0.2)
+
+
+def test_pid_moves_cart_toward_target():
+    controller = PIDController(target_position=1)
+    state = CartPoleState(theta=0.1)
+    dt = 1 / 120
+
+    for _ in range(120 * 8):
+        force = controller.force(state, dt)
+        state = step(state, force, dt)
+
+    assert state.x == pytest.approx(1, abs=0.15)
+    assert abs(state.theta) < 0.15
+
+
+def test_manual_input_perturbs_pid_force():
+    session = SimulationSession()
+    session.handle_command({"action": "mode", "mode": "pid"})
+    session.handle_command({"action": "manual", "left": True, "right": False})
+    session.handle_command({"action": "start"})
+    session.advance(1 / 120)
+
+    assert session.snapshot()["force"] == pytest.approx(-8)
+
+
+def test_session_saves_position_gains_and_target():
+    session = SimulationSession()
+    session.handle_command(
+        {
+            "action": "pid",
+            "kp": 20,
+            "ki": 0,
+            "kd": 5,
+            "position_kp": 2,
+            "position_kd": 0.5,
+            "target_position": 1,
+        }
+    )
+
+    state = session.snapshot()
+    assert state["position_kp"] == 2
+    assert state["position_kd"] == 0.5
+    assert state["target_position"] == 1
 
 
 def test_pid_reset_clears_accumulated_error():

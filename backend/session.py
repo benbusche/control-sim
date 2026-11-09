@@ -9,7 +9,7 @@ from .simulation import DEFAULT_PARAMETERS, reset_state, step
 
 
 TIME_STEP = 1 / 120
-FALL_ANGLE = math.radians(80)
+FALL_ANGLE = math.radians(90)
 TRACK_LIMIT = 2.5
 CART_BRAKE_RATE = 3.0
 POLE_DAMPING_RATE = 0.5
@@ -38,6 +38,9 @@ class SimulationSession:
                 "kp": self.controller.kp,
                 "ki": self.controller.ki,
                 "kd": self.controller.kd,
+                "position_kp": self.controller.position_kp,
+                "position_kd": self.controller.position_kd,
+                "target_position": self.controller.target_position,
             }
 
     def handle_command(self, command):
@@ -64,14 +67,27 @@ class SimulationSession:
 
             elif action == "pid":
                 try:
-                    self.controller = PIDController(
-                        kp=float(command["kp"]),
-                        ki=float(command["ki"]),
-                        kd=float(command["kd"]),
-                        max_force=DEFAULT_PARAMETERS.max_force,
+                    target_position = float(
+                        command.get("target_position", self.controller.target_position)
                     )
+                    kp = float(command["kp"])
+                    ki = float(command["ki"])
+                    kd = float(command["kd"])
+                    position_kp = float(command.get("position_kp", self.controller.position_kp))
+                    position_kd = float(command.get("position_kd", self.controller.position_kd))
                 except (KeyError, TypeError, ValueError) as error:
-                    raise ValueError("PID gains must be finite numbers") from error
+                    raise ValueError("PID settings must be numbers") from error
+                if abs(target_position) > TRACK_LIMIT:
+                    raise ValueError("Target position must be within the track limits")
+                self.controller = PIDController(
+                    kp=kp,
+                    ki=ki,
+                    kd=kd,
+                    target_position=target_position,
+                    position_kp=position_kp,
+                    position_kd=position_kd,
+                    max_force=DEFAULT_PARAMETERS.max_force,
+                )
 
             elif action == "start":
                 if self.status not in ("fallen", "track limit"):
@@ -102,14 +118,17 @@ class SimulationSession:
             if not self.running:
                 return
 
-            if self.mode == "manual":
-                force = manual_force(
-                    self.left_pressed,
-                    self.right_pressed,
-                    DEFAULT_PARAMETERS.max_force,
-                )
-            else:
-                force = self.controller.force(self.state, dt)
+            force = manual_force(
+                self.left_pressed,
+                self.right_pressed,
+                DEFAULT_PARAMETERS.max_force,
+            )
+            if self.mode == "pid":
+                force += self.controller.force(self.state, dt)
+            force = max(
+                -DEFAULT_PARAMETERS.max_force,
+                min(DEFAULT_PARAMETERS.max_force, force),
+            )
 
             self.state = step(self.state, force, dt)
             self.force = force

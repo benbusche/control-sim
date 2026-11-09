@@ -34,7 +34,7 @@
       <section id="manual-controls" class="controls" aria-label="Manual controls">
         <button id="left" type="button">Hold left ◀</button>
         <button id="right" type="button">Hold right ▶</button>
-        <span>Arrow keys also control the cart.</span>
+        <span>Arrow keys also work in PID mode to perturb the controller.</span>
       </section>
 
       <fieldset id="pid-controls">
@@ -42,7 +42,13 @@
         <label>Kp <input id="kp" type="number" value="20" step="1" /></label>
         <label>Ki <input id="ki" type="number" value="0" step="0.1" /></label>
         <label>Kd <input id="kd" type="number" value="5" step="0.1" /></label>
-        <span>Changes apply when you leave a field.</span>
+        <label>Position Kp <input id="position-kp" type="number" value="1" step="0.1" /></label>
+        <label>Position Kd <input id="position-kd" type="number" value="1" step="0.1" /></label>
+        <label>
+          Target position (m)
+          <input id="target-position" type="number" value="0" min="-2.5" max="2.5" step="0.1" />
+        </label>
+        <span>Settings apply when you leave a field.</span>
       </fieldset>
 
       <section class="readouts" aria-label="Simulation values">

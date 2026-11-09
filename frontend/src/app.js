@@ -2,7 +2,6 @@ import { getState, sendCommand as sendBackendCommand } from "./api.js";
 import { drawCartPole } from "./view.js";
 
 const modeSelect = document.querySelector("#mode");
-const manualControls = document.querySelector("#manual-controls");
 const pidControls = document.querySelector("#pid-controls");
 const connectionStatus = document.querySelector("#connection-status");
 const readouts = {
@@ -11,11 +10,15 @@ const readouts = {
   force: document.querySelector("#force"),
   status: document.querySelector("#simulation-status"),
 };
-const gainInputs = Object.fromEntries(
-  ["kp", "ki", "kd"].map((name) => [name, document.querySelector(`#${name}`)]),
-);
+const pidInputs = {
+  kp: document.querySelector("#kp"),
+  ki: document.querySelector("#ki"),
+  kd: document.querySelector("#kd"),
+  position_kp: document.querySelector("#position-kp"),
+  position_kd: document.querySelector("#position-kd"),
+  target_position: document.querySelector("#target-position"),
+};
 const manualInput = { left: false, right: false };
-let currentMode = "manual";
 let polling = false;
 
 function sendCommand(command) {
@@ -29,9 +32,7 @@ function sendCommand(command) {
 }
 
 function sendManualInput() {
-  if (currentMode === "manual") {
-    sendCommand({ action: "manual", ...manualInput });
-  }
+  sendCommand({ action: "manual", ...manualInput });
 }
 
 function releaseManualInput() {
@@ -41,7 +42,6 @@ function releaseManualInput() {
 }
 
 function setButtonInput(direction, pressed) {
-  if (currentMode !== "manual") return;
   manualInput[direction] = pressed;
   sendManualInput();
 }
@@ -66,7 +66,7 @@ function directionFromKey(key) {
 document.addEventListener("keydown", (event) => {
   if (event.target.matches("input, select, textarea")) return;
   const direction = directionFromKey(event.key);
-  if (!direction || currentMode !== "manual") return;
+  if (!direction) return;
 
   event.preventDefault();
   if (!event.repeat && !manualInput[direction]) {
@@ -102,20 +102,20 @@ document.querySelector("#reset").addEventListener("click", () => {
   sendCommand({ action: "reset" });
 });
 
-function updatePIDGains() {
-  const gains = Object.fromEntries(
-    Object.entries(gainInputs).map(([name, input]) => [name, Number(input.value)]),
+function updatePIDSettings() {
+  const settings = Object.fromEntries(
+    Object.entries(pidInputs).map(([name, input]) => [name, Number(input.value)]),
   );
   if (
-    Object.values(gainInputs).every((input) => input.value.trim() !== "") &&
-    Object.values(gains).every(Number.isFinite)
+    Object.values(pidInputs).every((input) => input.value.trim() !== "") &&
+    Object.values(settings).every(Number.isFinite)
   ) {
-    sendCommand({ action: "pid", ...gains });
+    sendCommand({ action: "pid", ...settings });
   }
 }
 
-for (const input of Object.values(gainInputs)) {
-  input.addEventListener("change", updatePIDGains);
+for (const input of Object.values(pidInputs)) {
+  input.addEventListener("change", updatePIDSettings);
 }
 
 async function refreshState() {
@@ -124,9 +124,7 @@ async function refreshState() {
 
   try {
     const state = await getState();
-    currentMode = state.mode;
     modeSelect.value = state.mode;
-    manualControls.hidden = state.mode !== "manual";
     pidControls.disabled = state.mode !== "pid";
     drawCartPole(state);
 
@@ -136,7 +134,7 @@ async function refreshState() {
     readouts.status.textContent = state.status;
     connectionStatus.textContent = "Connected to Python backend";
 
-    for (const [name, input] of Object.entries(gainInputs)) {
+    for (const [name, input] of Object.entries(pidInputs)) {
       if (document.activeElement !== input) input.value = state[name];
     }
   } catch {
