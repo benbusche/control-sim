@@ -1,5 +1,7 @@
 # Control Simulation
 
+https://github.com/user-attachments/assets/f015fc40-5a22-48d2-bd14-2fb8e98cbfd0
+
 ## Project overview
 
 A small browser app for watching and controlling an inverted pendulum on a cart.
